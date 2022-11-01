@@ -39,18 +39,27 @@ class GeneSequencing:
 # how many base pairs to use in computing the alignment
 
 	#TODO if we have time @ end - time complexities
-	def align( self, seq1, seq2, banded, align_length):   #seq1 and 2 are just the strings we want to run the prog on
+	def align( self, seq1, seq2, banded, align_length):   # seq1 and 2 are just the strings we want to run the prog on
 		self.banded = banded
-		self.MaxCharactersToAlign = align_length   #how many of the characters we want to use
+		self.MaxCharactersToAlign = align_length   # this is how many of the characters we want to use
+
 		sub1 = seq1[:align_length]
 		sub2 = seq2[:align_length]
 
 		#TODO how do I make a list of lists that holds ints
-		self.matrixVals = [[]] # list of lists containing the values
-		self.matrixPrev = [[]] # list of lists containing the prev node
-		# E = {x,y : (val, prev)}  TA suggested not doing a dictionary but to do 2 lists
+		self.matrixVals = []  # list of lists containing the values
+		self.matrixPrev = []  # list of lists containing the prev node
 
- 		#self.edit(sub1, sub2)   # e is the matrix i want
+		for i in range(align_length):
+			self.matrixVals.append([])
+			self.matrixPrev.append([])
+			for j in range(align_length):
+				self.matrixVals[i].append(None)
+				self.matrixPrev[i].append(None)
+		self.matrixVals[0][0] = 0
+
+ 		self.edit(sub1, sub2)
+
 # dummy code
 ###################################################################################################
 # your code should replace these three statements and populate the three variables: score, alignment1 and alignment2
@@ -74,17 +83,29 @@ class GeneSequencing:
 		else:
 			bandWidth = self.MaxCharactersToAlign
 
-		# E will be our matrix I make
-		for i in range(bandWidth):  # a bunch of inserts along first row
-			E[i, 0] = i * INDEL   #TODO how do i index and update 2d matricies
-			#TODO I also need to update the prev pointers for these- it would be just the prev x val
-		for j in range(bandWidth):  # more inserts along column
-			E[0, j] = j * INDEL
+
+		for i in range(1, bandWidth):  # a bunch of inserts along first row
+			self.matrixVals[i][0] = i * INDEL
+			self.matrixPrev[i][0] = self.matrixPrev[i-1][0]
+		for j in range(1, bandWidth):  # more inserts along column
+			self.matrixVals[0][j] = j * INDEL
+			self.matrixPrev[0][j] = self.matrixPrev[0][j-1]
 		for i in range(1, string1):
 			for j in range(1, string2):
-				E[i,j] = min(diff(i,j) + E[i-1, j-1], 5 + E[i, j-1], 5 + E[i-1, j]) # (diagonal(match, or sub): -3 or 1 , down(indel): 5, right(indel): 5)
-			# TODO accessing elements, i need to update the vals - are these the right vals/changes?
-			# TODO how do I have "min" return the one it picked so that I can update the prev vals matrix as well
+				#self.matrixVals[i][j] = min(diff(i,j) + self.matrixVals[i-1][j-1], INDEL + self.matrixVals[i][j-1], INDEL + self.matrixVals[i-1][j]) # (diagonal(match, or sub): -3 or 1 , down(indel): 5, right(indel): 5)
+				left = INDEL + self.matrixVals[i-1][j]
+				top = INDEL + self.matrixVals[i][j-1]
+				diag = diff(i, j) + self.matrixVals[i-1][j-1]
 
+				smallestVal = left
+				location = (i-1, j)
+				if top < smallestVal:
+					smallestVal = top
+					location = (i, j-1)
+				if diag < smallestVal:
+					smallestVal = diag
+					location = (i-1, j-1)
 
+				self.matrixVals[i][j] = smallestVal
+				self.matrixPrev[i][j] = location
 		# return E[[i], [j]] I dont think I need to return anything since im storing the matricies in the class
