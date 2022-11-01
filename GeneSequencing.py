@@ -32,9 +32,15 @@ class GeneSequencing:
 	def align( self, seq1, seq2, banded, align_length):   #seq1 and 2 are just the strings we want to run the prog on
 		self.banded = banded
 		self.MaxCharactersToAlign = align_length   #how many of the characters we want to use
-		E = {x,y : (val, prev)}
+		sub1 = seq1[:align_length]
+		sub2 = seq2[:align_length]
 
- 		self.edit(seq1, seq2)   # e is the matrix i want
+		#TODO how do I make a list of lists that holds ints
+		self.matrixVals = [[]] # list of lists containing the values
+		self.matrixPrev = [[]] # list of lists containing the prev node
+		# E = {x,y : (val, prev)}  TA suggested not doing a dictionary but to do 2 lists
+
+ 		self.edit(sub1, sub2)   # e is the matrix i want
 # dummy code
 ###################################################################################################
 # your code should replace these three statements and populate the three variables: score, alignment1 and alignment2
@@ -50,15 +56,13 @@ class GeneSequencing:
 		
 		return {'align_cost' : score, 'seqi_first100' : alignment1, 'seqj_first100' : alignment2}
 
-	def edit(self, x, y, E):
-		for i in range(x):
+	def edit(self, string1, string2):
+		# E will be our matrix I make
+		for i in range(string1):
 			E[i, 0] = i
-		for j in range(y):
+		for j in range(string2):
 			E[0, j] = j
-		for i in range(1,x):
-			for j in range(1,j):
+		for i in range(1,string1):
+			for j in range(1,string2):
 				E[i,j] = min(diff(i,j) + E[i-1, j-1], 1 + E[i, j-1], 1 + E[i-1, j])
-		return E[[x], [j]]
-
-
-1QLineF
+		return E[[i], [j]]
