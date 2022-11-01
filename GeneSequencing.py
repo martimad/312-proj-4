@@ -3,8 +3,8 @@
 from which_pyqt import PYQT_VER
 if PYQT_VER == 'PYQT5':
 	from PyQt5.QtCore import QLineF, QPointF
-elif PYQT_VER == 'PYQT4':
-	from PyQt4.QtCore import QLineF, QPointF
+# elif PYQT_VER == 'PYQT4':
+# 	from PyQt4.QtCore import QLineF, QPointF
 else:
 	raise Exception('Unsupported Version of PyQt: {}'.format(PYQT_VER))
 
@@ -29,19 +29,36 @@ class GeneSequencing:
 # you whether you should compute a banded alignment or full alignment, and _align_length_ tells you 
 # how many base pairs to use in computing the alignment
 
-	def align( self, seq1, seq2, banded, align_length):
+	def align( self, seq1, seq2, banded, align_length):   #seq1 and 2 are just the strings we want to run the prog on
 		self.banded = banded
-		self.MaxCharactersToAlign = align_length
+		self.MaxCharactersToAlign = align_length   #how many of the characters we want to use
+		E = {x,y : (val, prev)}
 
+ 		self.edit(seq1, seq2)   # e is the matrix i want
+# dummy code
 ###################################################################################################
 # your code should replace these three statements and populate the three variables: score, alignment1 and alignment2
-		score = random.random()*100;
-		alignment1 = 'abc-easy  DEBUG:({} chars,align_len={}{})'.format(
-			len(seq1), align_length, ',BANDED' if banded else '')
-		alignment2 = 'as-123--  DEBUG:({} chars,align_len={}{})'.format(
-			len(seq2), align_length, ',BANDED' if banded else '')
-###################################################################################################					
+# 		score = random.random()*100;
+# 		alignment1 = 'abc-easy  DEBUG:({} chars,align_len={}{})'.format(
+# 			len(seq1), align_length, ',BANDED' if banded else '')
+# 		alignment2 = 'as-123--  DEBUG:({} chars,align_len={}{})'.format(
+# 			len(seq2), align_length, ',BANDED' if banded else '')
+###################################################################################################
+		score = 1
+		alignment1 = 1
+		alignment2 = 1
 		
-		return {'align_cost':score, 'seqi_first100':alignment1, 'seqj_first100':alignment2}
+		return {'align_cost' : score, 'seqi_first100' : alignment1, 'seqj_first100' : alignment2}
+
+	def edit(self, x, y, E):
+		for i in range(x):
+			E[i, 0] = i
+		for j in range(y):
+			E[0, j] = j
+		for i in range(1,x):
+			for j in range(1,j):
+				E[i,j] = min(diff(i,j) + E[i-1, j-1], 1 + E[i, j-1], 1 + E[i-1, j])
+		return E[[x], [j]]
 
 
+1QLineF
