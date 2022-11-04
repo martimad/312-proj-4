@@ -38,7 +38,6 @@ class GeneSequencing:
 # you whether you should compute a banded alignment or full alignment, and _align_length_ tells you 
 # how many base pairs to use in computing the alignment
 
-	#TODO if we have time @ end - time complexities
 	def align( self, seq1, seq2, banded, align_length):   # seq1 and 2 are just the strings we want to run the prog on
 		self.banded = banded
 		self.MaxCharactersToAlign = align_length   # this is how many of the characters we want to use
@@ -49,33 +48,29 @@ class GeneSequencing:
 		self.matrixVals = []  # list of lists containing the values
 		self.matrixPrev = []  # list of lists containing the prev node
 
-		for i in range(len(sub1)):
-			self.matrixVals.append([])
-			self.matrixPrev.append([])
-			for j in range(len(sub2)):
-				self.matrixVals[i].append(None)
-				self.matrixPrev[i].append((0, 0))
-		self.matrixVals[0][0] = 0
+		if banded and abs(len(sub1) - len(sub2)) > 200:
+			score = math.inf
+			alignment1 = "No Alignment Possible"
+			alignment2 = "No Alignment Possible"
 
-		self.edit(sub1, sub2)
+		else:
+			for i in range(len(sub1)):
+				self.matrixVals.append([])
+				self.matrixPrev.append([])
+				for j in range(len(sub2)):
+					self.matrixVals[i].append(None)
+					self.matrixPrev[i].append((0, 0))
+			self.matrixVals[0][0] = 0
+			self.edit(sub1, sub2)
 
-# dummy code
-###################################################################################################
-# your code should replace these three statements and populate the three variables: score, alignment1 and alignment2
-# 		score = random.random()*100;
-# 		alignment1 = 'abc-easy  DEBUG:({} chars,align_len={}{})'.format(
-# 			len(seq1), align_length, ',BANDED' if banded else '')
-# 		alignment2 = 'as-123--  DEBUG:({} chars,align_len={}{})'.format(
-# 			len(seq2), align_length, ',BANDED' if banded else '')
-###################################################################################################
-		score = self.matrixVals[-1][-1]  #the last element of the matrixVals
+			score = self.matrixVals[-1][-1]  #the last element of the matrixVals
 
-		alignment1, alignment2 = self.returnStrings(sub1, sub2)
+			alignment1, alignment2 = self.returnStrings(sub1, sub2)
 
-		if len(alignment1) > 100:
-			alignment1 = alignment1[0:101]
-		if len(alignment2) > 100:
-			alignment2 = alignment2[0:101]
+			if len(alignment1) > 100:
+				alignment1 = alignment1[0:101]
+			if len(alignment2) > 100:
+				alignment2 = alignment2[0:101]
 
 		return {'align_cost' : score, 'seqi_first100' : alignment1, 'seqj_first100' : alignment2}
 
@@ -86,6 +81,8 @@ class GeneSequencing:
 		else:
 			bandWidth1 = len(string1)
 			bandWidth2 = len(string2)
+
+
 		for i in range(bandWidth1):  # a bunch of inserts along first row
 			self.matrixVals[i][0] = i * INDEL
 			self.matrixPrev[i][0] = (i-1, 0)
@@ -93,36 +90,94 @@ class GeneSequencing:
 			self.matrixVals[0][j] = j * INDEL
 			self.matrixPrev[0][j] = (0, j-1)
 		self.matrixPrev[0][0] = None
-		for i in range(1, len(string1)):
-			for j in range(1, bandWidth2):
-				left = INDEL + self.matrixVals[i-1][j]
-				top = INDEL + self.matrixVals[i][j-1]
-				diag = diff(string1[i], string2[j]) + self.matrixVals[i-1][j-1]
 
-				# then its on the top of the band
-				if top is None:
-					smallestVal = left
-					location = (i-1, j)
+		if self.banded:
+			for i in range(1, len(string1)):
+				smallestVal = math.inf
+				location = (0,0)
+				if i >= 3:
+					for j in range(i-MAXINDELS, min(MAXINDELS + i, len(string2))):
+						#left
+						if self.matrixVals[i - 1][j] is not None:
+							left = INDEL + self.matrixVals[i - 1][j]
+							smallestVal = left
+							location = (i - 1, j)
 
-				#in center or bottom
+						#top
+						if self.matrixVals[i][j - 1] is not None:
+							top = INDEL + self.matrixVals[i][j - 1]
+							if top < smallestVal:
+								smallestVal = top
+								location = (i, j-1)
+
+						if self.matrixVals[i - 1][j - 1] is not None:
+							diag = diff(string1[i], string2[j]) + self.matrixVals[i - 1][j - 1]
+							if diag < smallestVal:
+								smallestVal = diag
+								location = (i - 1, j - 1)
+
+						# smallestVal, location = self.innerLoop(i, j, string1, string2)
+						self.matrixVals[i][j] = smallestVal
+						self.matrixPrev[i][j] = location
+
 				else:
-					smallestVal = top
-					location = (i, j - 1)
+					for j in range(1, min(MAXINDELS + i, len(string2))):
+						#smallestVal, location = self.innerLoop(i, j, string1, string2)
+						# left
+						if self.matrixVals[i - 1][j] is not None:
+							left = INDEL + self.matrixVals[i - 1][j]
+							smallestVal = left
+							location = (i - 1, j)
 
-				# if it's in the center
-				if left is not None:
-					if left < smallestVal:
-						smallestVal = left
-						location = (i-1, j)
+						# top
+						if self.matrixVals[i][j - 1] is not None:
+							top = INDEL + self.matrixVals[i][j - 1]
+							if top < smallestVal:
+								smallestVal = top
+								location = (i, j - 1)
 
-				#all need to compare diag
-				if diag < smallestVal:
-					smallestVal = diag
-					location = (i-1, j-1)
+						diag = diff(string1[i], string2[j]) + self.matrixVals[i - 1][j - 1]
+						if diag < smallestVal:
+							smallestVal = diag
+							location = (i - 1, j - 1)
 
-				self.matrixVals[i][j] = smallestVal
-				self.matrixPrev[i][j] = location
+						self.matrixVals[i][j] = smallestVal
+						self.matrixPrev[i][j] = location
 
+
+		else:
+			for i in range(1, bandWidth1):
+				for j in range(1, bandWidth2):
+					smallestVal, location = self.innerLoop(i, j, string1, string2)
+					self.matrixVals[i][j] = smallestVal
+					self.matrixPrev[i][j] = location
+
+	def innerLoop(self, i ,j, string1, string2):
+		left = INDEL + self.matrixVals[i - 1][j]
+		top = INDEL + self.matrixVals[i][j - 1]
+		diag = diff(string1[i], string2[j]) + self.matrixVals[i - 1][j - 1]
+
+		# then its on the top of the band
+		if top is None:
+			smallestVal = left
+			location = (i - 1, j)
+
+		# in center or bottom
+		else:
+			smallestVal = top
+			location = (i, j - 1)
+
+		# if it's in the center
+		if left is not None:
+			if left < smallestVal:
+				smallestVal = left
+				location = (i - 1, j)
+
+		# all need to compare diag
+		if diag < smallestVal:
+			smallestVal = diag
+			location = (i - 1, j - 1)
+		return smallestVal, location
 	def returnStrings(self, seq1, seq2):
 		alignment1 = ""
 		alignment2 = ""

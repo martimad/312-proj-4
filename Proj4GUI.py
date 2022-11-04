@@ -18,11 +18,6 @@ if PYQT_VER == 'PYQT5':
 else:
 	raise Exception('Unsupported Version of PyQt: {}'.format(PYQT_VER))
 
-
-#TODO: Error checking on txt boxes
-#TODO: Color strings
-
-
 # Import in the code with the actual implementation
 from GeneSequencing import *
 #from GeneSequencing_complete import *

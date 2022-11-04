@@ -1,0 +1,4 @@
+1#polynomial
+2#exponential
+
+
